@@ -8,9 +8,9 @@
 
 `IMITextView`  provides background effects of textView like Instagram in iOS.
 
-<img src="https://github.com/immortal-it/IMITextView/tree/main/Images/demon001.png">
-<img src="https://github.com/immortal-it/IMITextView/tree/main/Images/demon002.png">
-<img src="https://github.com/immortal-it/IMITextView/tree/main/Images/demon003.png">
+<img src="https://github.com/immortal-it/IMITextView/blob/main/Images/demon001.png">
+<img src="https://github.com/immortal-it/IMITextView/blob/main/Images/demon002.png">
+<img src="https://github.com/immortal-it/IMITextView/blob/main/Images/demon003.png">
 
 ## Requirements
 
