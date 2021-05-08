@@ -152,11 +152,12 @@ public class IMTextLayoutManager: NSLayoutManager {
         color.setStroke()
         color.setFill()
         
-        let bakcgroundPath = UIBezierPath()
-        bakcgroundPath.lineWidth = 2.0
+        let backgroundPath = UIBezierPath()
         var lastLineRect: CGRect = .zero
         lineRects.enumerated().forEach {
             let cornerRadius = $0.element.height * lineHeightPercentageForCornerRadius
+            backgroundPath.append(UIBezierPath(roundedRect: $0.element, cornerRadius: cornerRadius))
+
             if $0.offset > 0, lastLineRect.maxY >= $0.element.minY {
 
                 // Current line rect top side points
@@ -170,104 +171,151 @@ public class IMTextLayoutManager: NSLayoutManager {
                 let leftRadius = (currentLineRectTopLeft.x - lastLineRectBottomLeft.x) * 0.5
                 let rightRadius = (lastLineRectBottomRight.x - currentLineRectTopRight.x) * 0.5
 
-                // Bakcground
-                if leftRadius >= cornerRadius && rightRadius >= cornerRadius {
-                    bakcgroundPath.append(UIBezierPath(roundedRect: CGRect(x: $0.element.minX, y: lastLineRectBottomLeft.y, width: $0.element.width, height: $0.element.maxY - lastLineRectBottomLeft.y), cornerRadius: cornerRadius))
-                } else {
-                    bakcgroundPath.append(UIBezierPath(roundedRect: $0.element, cornerRadius: cornerRadius))
-                }
+         
 
                 // Left corner
                 if leftRadius >= cornerRadius { // Left corner inside
-                    let addPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopLeft.x - cornerRadius, y: lastLineRectBottomLeft.y + cornerRadius ),
-                                               radius: cornerRadius,
-                                               startAngle: CGFloat.pi * 1.5,
-                                               endAngle: 0.0,
-                                               clockwise: true)
-                    addPath.append(UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopLeft.x + cornerRadius, y: lastLineRectBottomLeft.y + cornerRadius),
-                                                radius: cornerRadius,
-                                                startAngle: CGFloat.pi,
-                                                endAngle: CGFloat.pi * 1.5,
-                                                clockwise: true))
-                    addPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x - cornerRadius, y: lastLineRectBottomLeft.y))
-                    bakcgroundPath.append(addPath)
+                    
+                    // Fix current left corner
+                    let fixedPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopLeft.x + cornerRadius, y: lastLineRectBottomLeft.y + cornerRadius ),
+                                                 radius: cornerRadius,
+                                                 startAngle: CGFloat.pi,
+                                                 endAngle: CGFloat.pi * 1.5,
+                                                 clockwise: true)
+                    fixedPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: lastLineRectBottomLeft.y))
+                    fixedPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: lastLineRectBottomLeft.y + cornerRadius))
+                    backgroundPath.append(fixedPath.reversing())
+                    
+                    // Show left corner
+                    let cornerPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopLeft.x - cornerRadius, y: lastLineRectBottomLeft.y + cornerRadius ),
+                                                  radius: cornerRadius,
+                                                  startAngle: CGFloat.pi * 1.5,
+                                                  endAngle: 0.0,
+                                                  clockwise: true)
+                    cornerPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: lastLineRectBottomLeft.y))
+                    cornerPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x - cornerRadius, y: lastLineRectBottomLeft.y))
+                    backgroundPath.append(cornerPath)
+
                 } else if leftRadius <= -cornerRadius {  // Left corner outside
-                    let addPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomLeft.x - cornerRadius, y: currentLineRectTopLeft.y - cornerRadius),
-                                               radius: cornerRadius,
-                                               startAngle: CGFloat.pi * 0.5,
-                                               endAngle: 0,
-                                               clockwise: false)
-                    addPath.append(UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomLeft.x + cornerRadius, y: currentLineRectTopLeft.y - cornerRadius),
-                                                radius: cornerRadius,
-                                                startAngle: CGFloat.pi,
-                                                endAngle: CGFloat.pi * 0.5,
-                                                clockwise: false))
-                    addPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x - cornerRadius, y: currentLineRectTopLeft.y))
-                    bakcgroundPath.append(addPath)
+                                        
+                    // Fix last left corner
+                    let fixedPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomLeft.x + cornerRadius, y: currentLineRectTopLeft.y - cornerRadius ),
+                                                 radius: cornerRadius,
+                                                 startAngle: CGFloat.pi * 0.5,
+                                                 endAngle: CGFloat.pi,
+                                                 clockwise: true)
+                    fixedPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x, y: currentLineRectTopLeft.y))
+                    fixedPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x + cornerRadius, y: currentLineRectTopLeft.y))
+                    backgroundPath.append(fixedPath.reversing())
+
+                    // Show left corner
+                    let cornerPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomLeft.x - cornerRadius, y: currentLineRectTopLeft.y - cornerRadius),
+                                                  radius: cornerRadius,
+                                                  startAngle: 0.0,
+                                                  endAngle: CGFloat.pi * 0.5,
+                                                  clockwise: true)
+                    cornerPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x, y: currentLineRectTopLeft.y))
+                    cornerPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x, y: currentLineRectTopLeft.y - cornerRadius))
+                    backgroundPath.append(cornerPath)
+ 
                 } else if leftRadius == .zero { // Left corner equtal
-                    bakcgroundPath.move(to: CGPoint(x: currentLineRectTopLeft.x, y: currentLineRectTopLeft.y - cornerRadius))
-                    bakcgroundPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: currentLineRectTopLeft.y + cornerRadius))
-                    bakcgroundPath.addArc(withCenter: CGPoint(x: currentLineRectTopLeft.x + cornerRadius, y: currentLineRectTopLeft.y + cornerRadius),
-                                          radius: cornerRadius,
-                                          startAngle: CGFloat.pi,
-                                          endAngle: CGFloat.pi * 1.5,
-                                          clockwise: true)
-                    bakcgroundPath.addArc(withCenter: CGPoint(x: currentLineRectTopLeft.x + cornerRadius, y: currentLineRectTopLeft.y - cornerRadius),
-                                          radius: cornerRadius,
-                                          startAngle: CGFloat.pi * 0.5,
-                                          endAngle: CGFloat.pi,
-                                          clockwise: true)
+ 
+                    // Fix last left corner
+                    let fixedLastPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomLeft.x + cornerRadius, y: lastLineRectBottomLeft.y - cornerRadius),
+                                                      radius: cornerRadius,
+                                                      startAngle: CGFloat.pi * 0.5,
+                                                      endAngle: CGFloat.pi,
+                                                      clockwise: true)
+                    fixedLastPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x, y: lastLineRectBottomLeft.y))
+                    fixedLastPath.addLine(to: CGPoint(x: lastLineRectBottomLeft.x + cornerRadius, y: lastLineRectBottomLeft.y))
+                    backgroundPath.append(fixedLastPath.reversing())
+
+                    // Fix current left corner
+                    let fixedCurrentPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopLeft.x + cornerRadius, y: currentLineRectTopLeft.y + cornerRadius),
+                                                        radius: cornerRadius,
+                                                        startAngle: CGFloat.pi,
+                                                        endAngle: CGFloat.pi * 1.5,
+                                                        clockwise: true)
+                    fixedCurrentPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: currentLineRectTopLeft.y))
+                    fixedCurrentPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x, y: currentLineRectTopLeft.y + cornerRadius))
+                    backgroundPath.append(fixedCurrentPath.reversing())
                 }
 
                 // Right corner
                 if (rightRadius >= cornerRadius) { // Right corner inside
-                    let addPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopRight.x + cornerRadius, y: lastLineRectBottomRight.y + cornerRadius),
-                                               radius: cornerRadius,
-                                               startAngle: CGFloat.pi * 1.5,
-                                               endAngle: CGFloat.pi,
-                                               clockwise: false)
-                    addPath.append(UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: lastLineRectBottomRight.y + cornerRadius),
-                                                radius: cornerRadius,
-                                                startAngle: 0.0,
-                                                endAngle: CGFloat.pi * 1.5,
-                                                clockwise: false))
-                    addPath.addLine(to: CGPoint(x: currentLineRectTopRight.x + cornerRadius, y: lastLineRectBottomRight.y))
-                    bakcgroundPath.append(addPath)
+                     
+                    // Fix current right corner
+                    let fixedPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: lastLineRectBottomRight.y + cornerRadius ),
+                                                 radius: cornerRadius,
+                                                 startAngle: CGFloat.pi * 1.5,
+                                                 endAngle: 0.0,
+                                                 clockwise: true)
+                    fixedPath.addLine(to: CGPoint(x: currentLineRectTopRight.x, y: lastLineRectBottomRight.y))
+                    fixedPath.addLine(to: CGPoint(x: currentLineRectTopLeft.x - cornerRadius, y: lastLineRectBottomRight.y))
+                    backgroundPath.append(fixedPath.reversing())
+                    
+                    // Show right corner
+                    let cornerPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopRight.x + cornerRadius, y: lastLineRectBottomRight.y + cornerRadius ),
+                                                  radius: cornerRadius,
+                                                  startAngle: CGFloat.pi,
+                                                  endAngle: CGFloat.pi * 1.5,
+                                                  clockwise: true)
+                    cornerPath.addLine(to: CGPoint(x: currentLineRectTopRight.x, y: lastLineRectBottomRight.y))
+                    cornerPath.addLine(to: CGPoint(x: currentLineRectTopRight.x, y: lastLineRectBottomRight.y + cornerRadius))
+                    backgroundPath.append(cornerPath)
+                    
                 } else if rightRadius <= -cornerRadius { // Right corner outside
-                    let addPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomRight.x + cornerRadius, y: currentLineRectTopRight.y - cornerRadius),
-                                               radius: cornerRadius,
-                                               startAngle: CGFloat.pi * 0.5,
-                                               endAngle: CGFloat.pi,
-                                               clockwise: true)
-                    addPath.append(UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomRight.x - cornerRadius, y: currentLineRectTopRight.y - cornerRadius),
-                                                radius: cornerRadius,
-                                                startAngle: 0,
-                                                endAngle: CGFloat.pi * 0.5,
-                                                clockwise: true))
-                    addPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x + cornerRadius, y: currentLineRectTopRight.y))
-                    bakcgroundPath.append(addPath)
-                } else if rightRadius == .zero { // Right corner equtal
-                    bakcgroundPath.move(to: CGPoint(x: currentLineRectTopRight.x, y: currentLineRectTopRight.y - cornerRadius))
-                    bakcgroundPath.addLine(to: CGPoint(x: currentLineRectTopRight.x, y: currentLineRectTopRight.y + cornerRadius))
-                    bakcgroundPath.addArc(withCenter: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: currentLineRectTopRight.y + cornerRadius),
-                                          radius: cornerRadius,
-                                          startAngle: 0.0,
-                                          endAngle: CGFloat.pi * 1.5,
-                                          clockwise: false)
-                    bakcgroundPath.addArc(withCenter: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: currentLineRectTopRight.y - cornerRadius),
-                                          radius: cornerRadius,
-                                          startAngle: CGFloat.pi * 0.5,
-                                          endAngle: 0.0,
-                                          clockwise: false)
-                }
+                    
+                    // Fix last right corner
+                    let fixedPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomRight.x - cornerRadius, y: currentLineRectTopRight.y - cornerRadius ),
+                                                 radius: cornerRadius,
+                                                 startAngle: 0.0,
+                                                 endAngle: CGFloat.pi * 0.5,
+                                                 clockwise: true)
+                    fixedPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x, y: lastLineRectBottomRight.y))
+                    fixedPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x, y: currentLineRectTopLeft.y - cornerRadius))
+                    backgroundPath.append(fixedPath.reversing())
+                    
+                    // Show right corner
+                    let cornerPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomRight.x + cornerRadius, y: currentLineRectTopRight.y - cornerRadius),
+                                                  radius: cornerRadius,
+                                                  startAngle: CGFloat.pi * 0.5,
+                                                  endAngle: CGFloat.pi,
+                                                  clockwise: true)
+                    
+                    cornerPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x, y: currentLineRectTopRight.y))
+                    cornerPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x + cornerRadius, y: currentLineRectTopRight.y))
+                    backgroundPath.append(cornerPath)
 
-            } else {
-                bakcgroundPath.append(UIBezierPath(roundedRect: $0.element, cornerRadius: cornerRadius))
+                    
+                } else if rightRadius == .zero { // Right corner equtal
+                    
+                    // Fix last right corner
+                    let fixedLastPath = UIBezierPath(arcCenter: CGPoint(x: lastLineRectBottomRight.x - cornerRadius, y: lastLineRectBottomRight.y - cornerRadius),
+                                                      radius: cornerRadius,
+                                                      startAngle: 0.0,
+                                                      endAngle: CGFloat.pi * 0.5,
+                                                      clockwise: true)
+                    fixedLastPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x, y: lastLineRectBottomRight.y))
+                    fixedLastPath.addLine(to: CGPoint(x: lastLineRectBottomRight.x, y: lastLineRectBottomRight.y - cornerRadius))
+                    backgroundPath.append(fixedLastPath.reversing())
+
+                    // Fix current right corner
+                    let fixedCurrentPath = UIBezierPath(arcCenter: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: currentLineRectTopRight.y + cornerRadius),
+                                                        radius: cornerRadius,
+                                                        startAngle: CGFloat.pi * 1.5,
+                                                        endAngle: 0.0,
+                                                        clockwise: true)
+                    fixedCurrentPath.addLine(to: CGPoint(x: currentLineRectTopRight.x, y: currentLineRectTopRight.y))
+                    fixedCurrentPath.addLine(to: CGPoint(x: currentLineRectTopRight.x - cornerRadius, y: currentLineRectTopRight.y))
+                    backgroundPath.append(fixedCurrentPath.reversing())
+                }
             }
-            bakcgroundPath.stroke()
-            bakcgroundPath.fill()
             lastLineRect = $0.element
         }
+        
+        backgroundPath.stroke()
+        backgroundPath.fill()
         
         context.restoreGState()
     }
