@@ -102,7 +102,8 @@ public class IMITextView: UIScrollView {
         layoutManager.lineBackgroundColor = configuration.lineBackgroundColor
         layoutManager.lineBoderWidth = configuration.lineBoderWidth
         layoutManager.lineBoderColor = configuration.lineBoderColor
-        textView.textContainerInset = textView.textContainerInset
+        
+        textView.textContainerInset = configuration.lineBackgroundInset
 
         textView.typingAttributes[.strokeWidth] = configuration.strokeWidth * textView.contentScaleFactor
         textView.typingAttributes[.strokeColor] = configuration.strokeColor
@@ -127,11 +128,6 @@ public class IMITextView: UIScrollView {
     public var isEditable: Bool {
         get { textView.isEditable }
         set { textView.isEditable = newValue }
-    }
-    
-    public var textContainerInset: UIEdgeInsets {
-        get { textView.textContainerInset }
-        set { textView.textContainerInset = newValue }
     }
     
     // MARK: - FirstResponder

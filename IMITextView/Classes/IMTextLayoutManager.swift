@@ -169,9 +169,7 @@ public class IMTextLayoutManager: NSLayoutManager {
                 let lastLineRectBottomRight = CGPoint(x: lastLineRect.maxX, y: lastLineRect.maxY)
 
                 let leftRadius = (currentLineRectTopLeft.x - lastLineRectBottomLeft.x) * 0.5
-                let rightRadius = (lastLineRectBottomRight.x - currentLineRectTopRight.x) * 0.5
-
-         
+                let rightRadius = (lastLineRectBottomRight.x - currentLineRectTopRight.x) * 0.5         
 
                 // Left corner
                 if leftRadius >= cornerRadius { // Left corner inside
@@ -313,7 +311,6 @@ public class IMTextLayoutManager: NSLayoutManager {
             }
             lastLineRect = $0.element
         }
-        
         backgroundPath.stroke()
         backgroundPath.fill()
         
